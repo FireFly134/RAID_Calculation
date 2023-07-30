@@ -1,6 +1,7 @@
 # coding=UTF-8
 #
 #
+import os
 import asyncio
 
 from aiogram import Bot, Dispatcher, types
@@ -15,15 +16,19 @@ from sqlalchemy import create_engine
 from keyboards import control_kb
 
 
-from work import BOT_TOKEN, db
+from dotenv import load_dotenv
+# Берем переменные из окружения
+load_dotenv()
 
-engine = create_engine(db)  # данные для соединия с сервером
+engine = create_engine(os.getenv('DB_POSTGRESQL'))  # данные для соединия с сервером
 
-bot = Bot(token=BOT_TOKEN)
+bot = Bot(token=os.getenv('BOT_TOKEN'))
 
 loop = asyncio.new_event_loop()
 
 dp = Dispatcher(bot, loop=loop, storage=MemoryStorage())
+
+path = os.getenv('PATH')
 
 class user_data:
     def __init__(self):
@@ -69,11 +74,14 @@ async def content_type_text(message: types.Message):
     user_id = message.from_user.id
     msg = message.text
     if msg.isnumeric() and msg.isdecimal():
-        if user_id in u_data.dist:
+        if user_id not in u_data.dist:
+            u_data.update(user_id, {'num': msg})
+            await message.answer("Выберите тип кристалов\n🟦 Древний\n🟪 Темный\n🟧 Сакральный\n👇", reply_markup=control_kb)
+        else:
             if 'choice' not in u_data.dist[user_id]:
                 await message.answer("Выберите тип кристалов\n🟦 Древний\n🟪 Темный\n🟧 Сакральный\n👇", reply_markup=control_kb)
-        u_data.update(user_id, {'num': msg})
-        await write_in_db(message)
+            u_data.update(user_id, {'num': msg})
+            await write_in_db(message)
     elif "древн" in msg.lower() or "темн" in msg.lower() or "сакрал" in msg.lower() or "синий" in msg.lower() or "фиол" in msg.lower() or "оранж" in msg.lower():
         choice = 0
         if "древн" in msg.lower() or "синий" in msg.lower():
@@ -83,11 +91,14 @@ async def content_type_text(message: types.Message):
         elif "сакрал" in msg.lower() or "оранж" in msg.lower():
             choice = 'sacred'
         if choice != 0:
-            if user_id in u_data.dist:
+            if user_id not in u_data.dist:
+                u_data.update(user_id, {'choice': choice})
+                await message.answer("Введите количество кристалов")
+            else:
                 if 'num' not in u_data.dist[user_id]:
-                    await message.answer("Отлично, вы выбрали кристал, теперь введите сколько потратили")
-            u_data.update(user_id, {'choice': choice})
-            await write_in_db(message)
+                    await message.answer("Введите количество кристалов")
+                u_data.update(user_id, {'choice': choice})
+                await write_in_db(message)
     elif "посмотреть количество" in msg.lower():
         df = pd.read_sql(f"SELECT * FROM raid WHERE user_id = '{user_id}';", engine)
         await message.answer(f"🟦 Древний - всего {df.loc[0, 'ancient']}, осталось {226 - int(df.loc[0, 'ancient'])}\n🟪 Темный - всего {df.loc[0, 'dark']}, осталось {226 - int(df.loc[0, 'dark'])}\n🟧 Сакральный - всего {df.loc[0, 'sacred']}, осталось {26 - int(df.loc[0, 'sacred'])}")
@@ -95,7 +106,13 @@ async def content_type_text(message: types.Message):
         await message.answer("Поздравляю! Выберите тип кристалов на котором нужно сбросить счетчик.\n🟦🟪🟧 👇", reply_markup=control_kb)
         u_data.update(user_id, {'num': 'del'})
     elif "показать расписание событий" in msg.lower():
-        with open("event.jpg","rb") as photo:
+        with open(path+"event.jpg","rb") as photo:
+            await message.answer_photo(photo=photo)
+    elif "показать меткость и скорость кб" in msg.lower():
+        with open(path+"clan_boss_speed_and_accuracy.jpg", "rb") as photo:
+            await message.answer_photo(photo=photo)
+    elif "показать cколько краски надо" in msg.lower():
+        with open(path+"potion.jpg","rb") as photo:
             await message.answer_photo(photo=photo)
 
 async def cmd_cancel(message: types.Message):

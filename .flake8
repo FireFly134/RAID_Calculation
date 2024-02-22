@@ -1,0 +1,6 @@
+[flake8]
+extend-ignore = E203
+exclude=*/migrations/*
+per-file-ignores = __init__.py:F401
+application_import_names=
+	config

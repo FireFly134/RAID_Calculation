@@ -72,7 +72,7 @@ async def cmd_start(message: types.Message):
                """
         )
         await sql(
-            sql_text_request=f"""INSERT INTO raid (user_id) 
+            sql_text_request=f"""INSERT INTO raid (user_id)
                     VALUES('{message.from_user.id}');"""
         )
     await message.answer(enter_crys, reply_markup=control_kb)
@@ -107,7 +107,8 @@ async def write_in_db(message: types.Message):
                         reply_markup=control_kb,
                     )
                     await sql(
-                        sql_text_request=f"""UPDATE raid SET pristine_mif = '{num_mif}'
+                        sql_text_request=f"""UPDATE raid
+                        SET pristine_mif = '{num_mif}'
                                     WHERE user_id = '{user_id}';"""
                     )
                 else:
@@ -148,20 +149,37 @@ async def content_type_text(message: types.Message):
         if user_id not in u_data.dist:
             u_data.update(user_id, {"num": msg})
             await message.answer(
-                "Выберите тип кристалов\n🟦 Древний\n🟪 Темный\n🟧 Сакральный\n🟥 Первозданный\n👇",
+                """
+Выберите тип кристалов
+🟦 Древний
+🟪 Темный
+🟧 Сакральный
+🟥 Первозданный
+👇
+""",
                 reply_markup=control_kb,
             )
         else:
             if "choice" not in u_data.dist[user_id]:
                 await message.answer(
-                    "Выберите тип кристалов\n🟦 Древний\n🟪 Темный\n🟧 Сакральный\n🟥 Первозданный\n👇",
+                    """
+Выберите тип кристалов
+🟦 Древний
+🟪 Темный
+🟧 Сакральный
+🟥 Первозданный
+👇
+                    """,
                     reply_markup=control_kb,
                 )
             u_data.update(user_id, {"num": msg})
             await write_in_db(message)
     elif "сбросить счётчик(лега пришла)" == msg.lower():
         await message.answer(
-            "Поздравляю!🥳 Выберите тип кристалов на котором нужно сбросить счетчик.\n🟦🟪🟧🟥 👇",
+            """
+Поздравляю!🥳 Выберите тип кристалов на котором нужно сбросить счетчик.
+🟦🟪🟧🟥 👇
+""",
             reply_markup=control_kb,
         )
         u_data.update(user_id, {"num": "del"})

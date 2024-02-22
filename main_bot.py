@@ -11,23 +11,18 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 import pandas as pd
 from sqlalchemy import create_engine
+from sqlalchemy import text as sql_text
 
 from keyboards import control_kb
 
-
-from dotenv import load_dotenv
-# Берем переменные из окружения
-load_dotenv()
-
-engine = create_engine(os.getenv('DB_POSTGRESQL'))  # данные для соединия с сервером
+# данные для соединия с сервером
+engine = create_engine(os.getenv('DB_POSTGRESQL'))
 
 bot = Bot(token=os.getenv('BOT_TOKEN'))
 
 loop = asyncio.new_event_loop()
 
 dp = Dispatcher(bot, loop=loop, storage=MemoryStorage())
-
-path = os.getenv('PATH_DIR')
 
 enter_crys: str = "Введите количество кристалов"
 class user_data:
@@ -42,6 +37,13 @@ class user_data:
             self.dist.pop(user_id)
 
 
+async def sql(sql_text_request: str) -> None:
+    # Выполнение SQL - запроса с параметрами
+    with engine.connect() as connection:
+        connection.execute(
+            sql_text(sql_text_request)
+            )
+        connection.commit()
 async def cmd_start(message: types.Message):
     df = pd.read_sql(
         f"""SELECT count(*) FROM users
@@ -49,8 +51,23 @@ async def cmd_start(message: types.Message):
         engine
     )
     if df.iloc[0, 0] == 0:
-        engine.execute(f"INSERT INTO users (user_id, first_name, last_name, username, language_code) VALUES('{message.from_user.id}', '{message.from_user.first_name}', '{message.from_user.last_name}', '{message.from_user.username}', '{message.from_user.language_code}');")
-        engine.execute(f"INSERT INTO raid (user_id) VALUES('{message.from_user.id}');")
+        await sql(sql_text_request=f"""INSERT INTO users (
+                    user_id,
+                    first_name,
+                    last_name,
+                    username,
+                    language_code
+                    ) VALUES(
+                    '{message.from_user.id}',
+                    '{message.from_user.first_name}',
+                    '{message.from_user.last_name}',
+                    '{message.from_user.username}',
+                    '{message.from_user.language_code}'
+                    );
+               """)
+        await sql(sql_text_request=f"""INSERT INTO raid (user_id) 
+                    VALUES('{message.from_user.id}');"""
+                )
     await message.answer(enter_crys, reply_markup=control_kb)
     u_data.delete(message.from_user.id)
 
@@ -81,8 +98,8 @@ async def write_in_db(message: types.Message):
 {180 - num} и до мифического {210 - num_mif}\n{enter_crys}",
                         reply_markup=control_kb
                     )
-                    engine.execute(
-                        f"""UPDATE raid SET pristine_mif = '{num_mif}'
+                    await sql(
+                        sql_text_request=f"""UPDATE raid SET pristine_mif = '{num_mif}'
                                     WHERE user_id = '{user_id}';"""
                     )
                 else:
@@ -91,25 +108,22 @@ async def write_in_db(message: types.Message):
                         reply_markup=control_kb
                     )
             else:
-                engine.execute(
-                    f"""INSERT INTO arrival_legend (
-                    user_id,
-                    quantity,
-                    crystal
-                    )
-                    VALUES(
-                    '{message.from_user.id}',
-                    '{old_num}',
-                    '{u_data.dist[user_id]['choice']}'
-                    );"""
-                )
+                await sql(sql_text_request=f"""INSERT INTO arrival_legend (
+                            user_id,
+                            quantity,
+                            crystal
+                            )
+                            VALUES(
+                            '{message.from_user.id}',
+                            '{old_num}',
+                            '{u_data.dist[user_id]['choice']}'
+                            );""")
                 await message.answer(f"Счетчик обнулил. {enter_crys}...",
                                      reply_markup=control_kb)
 
-            engine.execute(
-                f"""UPDATE raid SET {u_data.dist[user_id]['choice']} = '{num}'
-                WHERE user_id = '{user_id}';"""
-            )
+            await sql(sql_text_request=f"""UPDATE raid SET
+{u_data.dist[user_id]['choice']} = '{num}'
+                        WHERE user_id = '{user_id}';""")
             u_data.delete(user_id)
 
 
@@ -130,18 +144,18 @@ async def content_type_text(message: types.Message):
         u_data.update(user_id, {'num': 'del'})
     elif "сбросить счётчик(мифик пришел)" == msg.lower():
         await message.answer("Поздравляю!🤩🥳", reply_markup=control_kb)
-        engine.execute(
-            f"""UPDATE raid SET pristine_mif = '0'
+        await sql(
+            sql_text_request=f"""UPDATE raid SET pristine_mif = '0'
                         WHERE user_id = '{user_id}';"""
         )
     elif "показать расписание событий" == msg.lower():
-        with open(path+"event.jpg","rb") as photo:
+        with open("./event.jpg","rb") as photo:
             await message.answer_photo(photo=photo)
     elif "показать меткость и скорость кб" == msg.lower():
-        with open(path+"clan_boss_speed_and_accuracy.jpg", "rb") as photo:
+        with open("./clan_boss_speed_and_accuracy.jpg", "rb") as photo:
             await message.answer_photo(photo=photo)
     elif "показать cколько краски надо" == msg.lower():
-        with open(path+"potion.jpg","rb") as photo:
+        with open("./potion.jpg","rb") as photo:
             await message.answer_photo(photo=photo)
     elif "посмотреть количество" == msg.lower():
         df = pd.read_sql(

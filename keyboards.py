@@ -18,4 +18,3 @@ control_kb = ReplyKeyboardMarkup(resize_keyboard=True)
 control_kb.row(btn1, btn2, btn3, btn4)
 control_kb.row(btn5, btn6, btn7)
 control_kb.row(btn8, btn9, btn10)
-

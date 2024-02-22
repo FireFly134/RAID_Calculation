@@ -8,6 +8,7 @@ from sqlalchemy import create_engine
 from aiogram import Bot
 
 from dotenv import load_dotenv
+
 # Берем переменные из окружения
 load_dotenv()
 
@@ -21,9 +22,7 @@ async def send_message(msg: str, chat_id: str) -> None:
 
 async def mass_send_message(msg: str, resend: bool = False) -> None:
     if not resend:
-        engine.execute(
-            f"""UPDATE users SET send_msg = 'false';"""
-        )
+        engine.execute(f"""UPDATE users SET send_msg = 'false';""")
     info = pd.read_sql(
         "SELECT user_id FROM users WHERE send_msg = 'false';", engine
     )
@@ -53,11 +52,12 @@ def go_main(msg: str, chat_id: str = "943180118") -> None:
         loop.run_until_complete(send_message(msg, chat_id))
 
 
-
 if __name__ == "__main__":
-    go_main(msg="""Привет, я обновился!🥳
+    go_main(
+        msg="""Привет, я обновился!🥳
 Теперь тебе доступен подсчет  ️"Первозданных кристаллов"♦️,  а также могу отдельно рассчитывать сколько осталось до гаранта легендарного и мифического героя из этих же осколков♦️.
-    """)
+    """
+    )
 #     go_main(
 #         msg="""Привет, я обновился!🥳
 # Теперь тебе доступен подсчет "Первозданных кристаллов"♦️,  а также могу отдельно рассчитывать сколько осталось до гаранта легендарного и мифического героя из этих же осколков♦️.

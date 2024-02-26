@@ -34,11 +34,11 @@ stages:          # List of stages for jobs, and their order of execution
 docker-build:
   # Use the official docker image.
   image: docker:cli
-  tags:
-    - docker
   stage: build
   services:
     - docker:dind
+  tags:
+    - docker
   variables:
     DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
     LINT_SCRIPT: "python3 -m black --check --diff --color . && python3 -m flake8 . && python3 -m mypy --color --pretty ."

@@ -43,7 +43,7 @@ docker-build:
     - docker:dind
   variables:
     DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
-    IMAGE_TAG_DEV: BOT_IMAGE_TAG-$CI_JOB_ID
+    IMAGE_TAG_DEV: $BOT_IMAGE_TAG-$CI_JOB_ID
     IMAGE_TAG_AMD: $IMAGE_TAG-amd
     IMAGE_TAG_ARM: $IMAGE_TAG-arm
     BUILD_ARM64: 'false'

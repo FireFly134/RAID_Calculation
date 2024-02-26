@@ -38,7 +38,7 @@ stages:          # List of stages for jobs, and their order of execution
 docker-build:
   # Use the official docker image.
   image: docker:cli
-  stage: test
+  stage: build
   tags:
     - docker
   services:

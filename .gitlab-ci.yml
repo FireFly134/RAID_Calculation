@@ -36,7 +36,7 @@ stages:          # List of stages for jobs, and their order of execution
 docker-build:
   # Use the official docker image.
   image: docker:cli
-  stage: build
+  stage: test
   tags:
     - docker
   services:
@@ -55,8 +55,11 @@ docker-build:
   script:
     - docker build --pull -t "$DOCKER_IMAGE_NAME" .
     - docker push "$DOCKER_IMAGE_NAME"
-    - if [[ -n "${LINT_SCRIPT}" ]]; then docker run --rm $LINT_DOCKER_ARG $LINT_DOCKER_ARG_1
-      $IMAGE_TAG_DEV sh -c "$LINT_SCRIPT"; fi
+    - |
+      if [[ -n "${LINT_SCRIPT}" ]]; then 
+        docker run --rm $LINT_DOCKER_ARG $LINT_DOCKER_ARG_1
+        $IMAGE_TAG_DEV sh -c "$LINT_SCRIPT"; 
+      fi
     - |
       if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
         docker tag "$DOCKER_IMAGE_NAME" "$CI_REGISTRY_IMAGE:latest"
@@ -67,3 +70,6 @@ docker-build:
     - if: $CI_COMMIT_BRANCH
       exists:
         - Dockerfile
+
+include:
+  - .ci/raid_calculation_bot.yaml

@@ -1,0 +1,9 @@
+include: '/.ci/base.yaml'
+
+
+build raid_calculation_bot:
+  extends: .build_base
+  variables:
+    IMAGE_TAG: $BOT_IMAGE_TAG
+    CHANGES_PATH: /**/*
+    LINT_SCRIPT: "python3 -m black --check --diff --color . && python3 -m flake8 . && python3 -m mypy --color --pretty ."

@@ -63,5 +63,5 @@ docker-build:
       exists:
         - Dockerfile
 
-include:
-  - .ci/raid_calculation_bot.yaml
+#include:
+#  - .ci/raid_calculation_bot.yaml

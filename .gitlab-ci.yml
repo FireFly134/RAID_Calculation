@@ -39,6 +39,9 @@ docker-build:
   # Use the official docker image.
   image: docker:cli
   stage: build
+  only:
+    - merge_request
+    - main
   tags:
     - docker
   services:
@@ -62,6 +65,19 @@ docker-build:
     - if: $CI_COMMIT_BRANCH
       exists:
         - Dockerfile
+
+
+docker-deploy:
+  tags:
+    - docker
+  stage: deploy
+  only:
+    - main
+  environment: production
+  script:
+    - echo "Deploying application..."
+    - echo "Application successfully deployed."
+
 
 #include:
 #  - .ci/raid_calculation_bot.yaml

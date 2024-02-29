@@ -23,20 +23,7 @@ stages:          # List of stages for jobs, and their order of execution
   - test
   - deploy
 
-# This file is a template, and might need editing before it works on your project.
-# To contribute improvements to CI/CD templates, please follow the Development guide at:
-# https://docs.gitlab.com/ee/development/cicd/templates.html
-# This specific template is located at:
-# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Docker.gitlab-ci.yml
-
-# Build a Docker image with CI/CD and push to the GitLab registry.
-# Docker-in-Docker documentation: https://docs.gitlab.com/ee/ci/docker/using_docker_build.html
-#
-# This template uses one generic job with conditional builds
-# for the default branch and all other (MR) branches.
-
 docker-build:
-  # Use the official docker image.
   image: docker:cli
   stage: build
   tags:
@@ -47,6 +34,8 @@ docker-build:
     DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  after_script:
+    - docker image prune -a
   # All branches are tagged with $DOCKER_IMAGE_NAME (defaults to commit ref slug)
   # Default branch is also tagged with `latest`
   script:
@@ -79,9 +68,14 @@ docker-deploy:
   only:
     - main
   environment: production
+  variables:
+    DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
   script:
-    - echo "Deploying application..."
-    - echo "Application successfully deployed."
+    - cat ${ENV} >> .env
+    - docker stop $DOCKER_IMAGE_NAME
+    - docker pull $DOCKER_IMAGE_NAME
+    - docker run $DOCKER_IMAGE_NAME
+
 
 
 #include:

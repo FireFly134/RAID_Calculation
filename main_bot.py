@@ -15,6 +15,8 @@ from sqlalchemy import text as sql_text
 
 from keyboards import control_kb
 
+print('DB_POSTGRESQL = ', os.getenv("DB_POSTGRESQL"))
+print('BOT_TOKEN = ', os.getenv("BOT_TOKEN"))
 # данные для соединия с сервером
 engine = create_engine(os.getenv("DB_POSTGRESQL"))
 

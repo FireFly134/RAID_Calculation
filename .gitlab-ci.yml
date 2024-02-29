@@ -74,7 +74,7 @@ docker-deploy:
     DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
   script:
     - cat ${ENV} >> .env
-    - cat .env
+    - cat ./.env
     - docker stop raid_calculation_bot || true  # Остановить контейнер, если он запущен (игнорируя ошибку, если контейнер не найден)
     - docker rm raid_calculation_bot || true    # Удалить контейнер (игнорируя ошибку, если контейнер не найден)
-    - docker run -d --name raid_calculation_bot "$DOCKER_IMAGE_NAME"
+    - docker run --env-file ./.env -d --name raid_calculation_bot "$DOCKER_IMAGE_NAME"

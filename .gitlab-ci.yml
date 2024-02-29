@@ -43,7 +43,7 @@ docker-build:
     - docker push "$DOCKER_IMAGE_NAME"
     - |
       if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
-        docker tag "$DOCKER_IMAGE_NAME" name "raid_calculation_bot" "$CI_REGISTRY_IMAGE:latest"
+        docker tag "$DOCKER_IMAGE_NAME" "$CI_REGISTRY_IMAGE:latest"
         docker push "$CI_REGISTRY_IMAGE:latest"
       fi
     - echo "BOT_IMAGE_TAG"
@@ -74,6 +74,6 @@ docker-deploy:
     DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
   script:
     - cat ${ENV} >> .env
-    - docker stop raid_calculation_bot
-    - docker pull $DOCKER_IMAGE_NAME
-    - docker run $DOCKER_IMAGE_NAME
+    - docker stop raid_calculation_bot || true  # Остановить контейнер, если он запущен (игнорируя ошибку, если контейнер не найден)
+    - docker rm raid_calculation_bot || true    # Удалить контейнер (игнорируя ошибку, если контейнер не найден)
+    - docker run -d --name raid_calculation_bot "$DOCKER_IMAGE_NAME"

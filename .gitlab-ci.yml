@@ -77,7 +77,3 @@ docker-deploy:
     - docker stop $BOT_IMAGE_TAG
     - docker pull $BOT_IMAGE_TAG
     - docker run $BOT_IMAGE_TAG
-  rules:
-    - if: $CI_COMMIT_BRANCH
-      exists:
-        - Dockerfile

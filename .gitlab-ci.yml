@@ -43,7 +43,7 @@ docker-build:
     - docker push "$DOCKER_IMAGE_NAME"
     - |
       if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
-        docker tag "$BOT_IMAGE_TAG" name "raid_calculation_bot" "$CI_REGISTRY_IMAGE:latest"
+        docker tag "$DOCKER_IMAGE_NAME" name "raid_calculation_bot" "$CI_REGISTRY_IMAGE:latest"
         docker push "$CI_REGISTRY_IMAGE:latest"
       fi
     - echo "BOT_IMAGE_TAG"
@@ -75,5 +75,5 @@ docker-deploy:
   script:
     - cat ${ENV} >> .env
     - docker stop raid_calculation_bot
-    - docker pull $BOT_IMAGE_TAG
-    - docker run $BOT_IMAGE_TAG
+    - docker pull $DOCKER_IMAGE_NAME
+    - docker run $DOCKER_IMAGE_NAME

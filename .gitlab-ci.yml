@@ -39,11 +39,11 @@ docker-build:
   # All branches are tagged with $DOCKER_IMAGE_NAME (defaults to commit ref slug)
   # Default branch is also tagged with `latest`
   script:
-    - docker build --pull -t "$BOT_IMAGE_TAG" .
-    - docker push "$BOT_IMAGE_TAG"
+    - docker build --pull -t "$DOCKER_IMAGE_NAME" .
+    - docker push "$DOCKER_IMAGE_NAME"
     - |
       if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
-        docker tag "$BOT_IMAGE_TAG" "$CI_REGISTRY_IMAGE:latest"
+        docker tag "$BOT_IMAGE_TAG" name "raid_calculation_bot" "$CI_REGISTRY_IMAGE:latest"
         docker push "$CI_REGISTRY_IMAGE:latest"
       fi
     - echo "BOT_IMAGE_TAG"

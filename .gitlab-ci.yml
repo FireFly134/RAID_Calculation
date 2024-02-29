@@ -70,7 +70,6 @@ docker-deploy:
   stage: deploy
   only:
     - main
-  environment: production
   script:
     - echo "Deploying application..."
     - echo "Application successfully deployed."

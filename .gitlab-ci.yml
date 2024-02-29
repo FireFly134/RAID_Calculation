@@ -39,9 +39,6 @@ docker-build:
   # Use the official docker image.
   image: docker:cli
   stage: build
-  only:
-    - merge_request
-    - main
   tags:
     - docker
   services:

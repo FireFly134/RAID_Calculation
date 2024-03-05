@@ -57,7 +57,10 @@ test-job:   # This job also runs in the test stage.
     - docker-build
   after_script:
     - docker container prune --force
-    - docker image prune -a --force
+    - |
+      if [[ "$CI_COMMIT_BRANCH" != "$CI_DEFAULT_BRANCH" ]]; then
+        docker image prune -a --force
+      fi
   script:
     - docker run $DOCKER_IMAGE_NAME sh -c "python3 -m black --check --diff --color . && python3 -m flake8 . && python3 -m mypy --color --pretty ."
 

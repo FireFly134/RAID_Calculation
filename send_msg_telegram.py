@@ -1,16 +1,11 @@
 import asyncio
 import os
 
+from aiogram import Bot
+
 import pandas as pd
 
 from sqlalchemy import create_engine
-
-from aiogram import Bot
-
-from dotenv import load_dotenv
-
-# Берем переменные из окружения
-load_dotenv()
 
 bot = Bot(os.getenv("BOT_TOKEN", ""))
 engine = create_engine(os.getenv("DB_POSTGRESQL"))

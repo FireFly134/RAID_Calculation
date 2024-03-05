@@ -8,9 +8,6 @@ aiogram = "==2.25.1"
 pandas = "*"
 sqlalchemy = "*"
 psycopg2-binary = "*"
-black = "*"
-flake8 = "*"
-mypy = "*"
 
 [dev-packages]
 black = "*"

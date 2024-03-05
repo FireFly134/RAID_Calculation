@@ -1,22 +1,17 @@
-# coding=UTF-8
-#
-#
-import os
 import asyncio
+import os
 
 from aiogram import Bot, Dispatcher, types
-from aiogram.dispatcher.filters import Text
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-
-
-import pandas as pd
-from sqlalchemy import create_engine
-from sqlalchemy import text as sql_text
+from aiogram.dispatcher.filters import Text
 
 from keyboards import control_kb
 
-print('DB_POSTGRESQL = ', os.getenv("DB_POSTGRESQL"))
-print('BOT_TOKEN = ', os.getenv("BOT_TOKEN"))
+import pandas as pd
+
+from sqlalchemy import create_engine
+from sqlalchemy import text as sql_text
+
 # данные для соединия с сервером
 engine = create_engine(os.getenv("DB_POSTGRESQL"))
 
@@ -29,18 +24,21 @@ dp = Dispatcher(bot, loop=loop, storage=MemoryStorage())
 enter_crys: str = "Введите количество кристалов"
 
 
-class user_data:
-    def __init__(self):
-        self.dist = {}
+class UserData:
+    def __init__(self) -> None:
+        self.dict: dict[int, dict[str, str]] = dict()
+        return
 
-    def update(self, user_id, dist):
-        if user_id not in self.dist:
-            self.dist.update({user_id: {}})
-        self.dist[user_id].update(dist)
+    def update(self, user_id: int, dict: dict[str, str]) -> None:
+        if user_id not in self.dict:
+            self.dict.update({user_id: {}})
+        self.dict[user_id].update(dict)
+        return
 
-    def delete(self, user_id):
-        if user_id in self.dist:
-            self.dist.pop(user_id)
+    def delete(self, user_id: int) -> None:
+        if user_id in self.dict:
+            self.dict.pop(user_id)
+        return
 
 
 async def sql(sql_text_request: str) -> None:
@@ -50,7 +48,7 @@ async def sql(sql_text_request: str) -> None:
         connection.commit()
 
 
-async def cmd_start(message: types.Message):
+async def cmd_start(message: types.Message) -> None:
     df = pd.read_sql(
         f"""SELECT count(*) FROM users
     WHERE user_id = '{message.from_user.id}'""",
@@ -81,26 +79,26 @@ async def cmd_start(message: types.Message):
     u_data.delete(message.from_user.id)
 
 
-async def write_in_db(message: types.Message):
+async def write_in_db(message: types.Message) -> None:
     user_id = message.from_user.id
-    if user_id in u_data.dist:
-        if "num" in u_data.dist[user_id] and "choice" in u_data.dist[user_id]:
+    if user_id in u_data.dict:
+        if "num" in u_data.dict[user_id] and "choice" in u_data.dict[user_id]:
             num: int = 0
             old_num: int = 0
             df: pd.DataFrame = pd.read_sql(
                 f"SELECT * FROM raid WHERE user_id = '{user_id}';", engine
             )
             if not df.empty:
-                old_num = int(df.loc[0, u_data.dist[user_id]["choice"]])
-            if u_data.dist[user_id]["num"] != "del":
-                num = int(u_data.dist[user_id]["num"]) + old_num
-                if u_data.dist[user_id]["choice"] == "sacred":
+                old_num = int(df.loc[0, u_data.dict[user_id]["choice"]])
+            if u_data.dict[user_id]["num"] != "del":
+                num = int(u_data.dict[user_id]["num"]) + old_num
+                if u_data.dict[user_id]["choice"] == "sacred":
                     await message.answer(
                         f"Добавил. Осталось примерно {56 - num} {enter_crys}",
                         reply_markup=control_kb,
                     )
-                elif u_data.dist[user_id]["choice"] == "pristine":
-                    num_mif = int(u_data.dist[user_id]["num"]) + int(
+                elif u_data.dict[user_id]["choice"] == "pristine":
+                    num_mif = int(u_data.dict[user_id]["num"]) + int(
                         df.loc[0, "pristine_mif"]
                     )
                     await message.answer(
@@ -128,7 +126,7 @@ async def write_in_db(message: types.Message):
                             VALUES(
                             '{message.from_user.id}',
                             '{old_num}',
-                            '{u_data.dist[user_id]['choice']}'
+                            '{u_data.dict[user_id]['choice']}'
                             );"""
                 )
                 await message.answer(
@@ -138,17 +136,17 @@ async def write_in_db(message: types.Message):
 
             await sql(
                 sql_text_request=f"""UPDATE raid SET
-{u_data.dist[user_id]['choice']} = '{num}'
+{u_data.dict[user_id]['choice']} = '{num}'
                         WHERE user_id = '{user_id}';"""
             )
             u_data.delete(user_id)
 
 
-async def content_type_text(message: types.Message):
-    user_id = message.from_user.id
+async def content_type_text(message: types.Message) -> None:
+    user_id: int = message.from_user.id
     msg = message.text
     if msg.isnumeric() and msg.isdecimal():
-        if user_id not in u_data.dist:
+        if user_id not in u_data.dict:
             u_data.update(user_id, {"num": msg})
             await message.answer(
                 """
@@ -162,7 +160,7 @@ async def content_type_text(message: types.Message):
                 reply_markup=control_kb,
             )
         else:
-            if "choice" not in u_data.dist[user_id]:
+            if "choice" not in u_data.dict[user_id]:
                 await message.answer(
                     """
 Выберите тип кристалов
@@ -240,22 +238,22 @@ async def content_type_text(message: types.Message):
         ):
             choice = "pristine"
         if choice != "0":
-            if user_id not in u_data.dist:
+            if user_id not in u_data.dict:
                 u_data.update(user_id, {"choice": choice})
                 await message.answer(enter_crys)
             else:
-                if "num" not in u_data.dist[user_id]:
+                if "num" not in u_data.dict[user_id]:
                     await message.answer(enter_crys)
                 u_data.update(user_id, {"choice": choice})
                 await write_in_db(message)
 
 
-async def cmd_cancel(message: types.Message):
+async def cmd_cancel(message: types.Message) -> None:
     user_id = message.from_id
     u_data.delete(user_id)
 
 
-async def set_default_commands(dp):
+async def set_default_commands() -> None:
     await dp.bot.set_my_commands(
         [
             types.BotCommand("start", "Запустить бота"),
@@ -266,8 +264,8 @@ async def set_default_commands(dp):
     )
 
 
-async def main():
-    await set_default_commands(dp)
+async def main() -> None:
+    await set_default_commands()
     dp.register_message_handler(cmd_start, commands="start", state="*")
     dp.register_message_handler(
         cmd_cancel, Text(equals="отмена", ignore_case=True), state="*"
@@ -281,5 +279,5 @@ async def main():
 
 
 if __name__ == "__main__":
-    u_data = user_data()
+    u_data = UserData()
     asyncio.run(main())

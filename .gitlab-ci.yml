@@ -32,8 +32,6 @@ docker-build:
     - docker:dind
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-  after_script:
-    - docker image prune -a
   # All branches are tagged with $DOCKER_IMAGE_NAME (defaults to commit ref slug)
   # Default branch is also tagged with `latest`
   script:
@@ -50,14 +48,19 @@ docker-build:
       exists:
         - Dockerfile
 
-lint-test-job:   # This job also runs in the test stage.
+
+test-job:   # This job also runs in the test stage.
   stage: test    # It can run at the same time as unit-test-job (in parallel).
   tags:
     - docker
+  needs:
+    - docker-build
+  after_script:
+    - docker container prune --force
+    - docker image prune -a --force
   script:
-    - echo "Linting code... This will take about 10 seconds."
-    - sleep 10
-    - echo "No lint issues found."
+    - docker run $DOCKER_IMAGE_NAME sh -c "python3 -m black --check --diff --color . && python3 -m flake8 . && python3 -m mypy --color --pretty ."
+
 
 docker-deploy:
   tags:

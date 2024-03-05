@@ -1,6 +1,6 @@
-version: '3'
+version: '3.3'
 services:
-  bot-metrica_old:
+  raid_calculation:
     build:
       context: .
       dockerfile: Dockerfile

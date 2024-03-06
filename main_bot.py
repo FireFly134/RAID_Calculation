@@ -26,18 +26,22 @@ enter_crys: str = "Введите количество кристалов"
 
 class UserData:
     def __init__(self) -> None:
-        self.dict: dict[int, dict[str, str]] = dict()
+        self._dict: dict[int, dict[str, str]] = dict()
         return
 
-    def update(self, user_id: int, dict: dict[str, str]) -> None:
-        if user_id not in self.dict:
-            self.dict.update({user_id: {}})
-        self.dict[user_id].update(dict)
+    @property
+    def data(self) -> dict[int, dict[str, str]]:
+        return self._dict
+
+    def update(self, user_id: int, data: dict[str, str]) -> None:
+        if user_id not in self._dict:
+            self._dict.update({user_id: {}})
+        self._dict[user_id].update(data)
         return
 
     def delete(self, user_id: int) -> None:
-        if user_id in self.dict:
-            self.dict.pop(user_id)
+        if user_id in self._dict:
+            self._dict.pop(user_id)
         return
 
 
@@ -46,6 +50,7 @@ async def sql(sql_text_request: str) -> None:
     with engine.connect() as connection:
         connection.execute(sql_text(sql_text_request))
         connection.commit()
+    return
 
 
 async def cmd_start(message: types.Message) -> None:
@@ -77,28 +82,29 @@ async def cmd_start(message: types.Message) -> None:
         )
     await message.answer(enter_crys, reply_markup=control_kb)
     u_data.delete(message.from_user.id)
+    return
 
 
 async def write_in_db(message: types.Message) -> None:
     user_id = message.from_user.id
-    if user_id in u_data.dict:
-        if "num" in u_data.dict[user_id] and "choice" in u_data.dict[user_id]:
+    if user_id in u_data.data:
+        if "num" in u_data.data[user_id] and "choice" in u_data.data[user_id]:
             num: int = 0
             old_num: int = 0
             df: pd.DataFrame = pd.read_sql(
                 f"SELECT * FROM raid WHERE user_id = '{user_id}';", engine
             )
             if not df.empty:
-                old_num = int(df.loc[0, u_data.dict[user_id]["choice"]])
-            if u_data.dict[user_id]["num"] != "del":
-                num = int(u_data.dict[user_id]["num"]) + old_num
-                if u_data.dict[user_id]["choice"] == "sacred":
+                old_num = int(df.loc[0, u_data.data[user_id]["choice"]])
+            if u_data.data[user_id]["num"] != "del":
+                num = int(u_data.data[user_id]["num"]) + old_num
+                if u_data.data[user_id]["choice"] == "sacred":
                     await message.answer(
                         f"Добавил. Осталось примерно {56 - num} {enter_crys}",
                         reply_markup=control_kb,
                     )
-                elif u_data.dict[user_id]["choice"] == "pristine":
-                    num_mif = int(u_data.dict[user_id]["num"]) + int(
+                elif u_data.data[user_id]["choice"] == "pristine":
+                    num_mif = int(u_data.data[user_id]["num"]) + int(
                         df.loc[0, "pristine_mif"]
                     )
                     await message.answer(
@@ -126,7 +132,7 @@ async def write_in_db(message: types.Message) -> None:
                             VALUES(
                             '{message.from_user.id}',
                             '{old_num}',
-                            '{u_data.dict[user_id]['choice']}'
+                            '{u_data.data[user_id]['choice']}'
                             );"""
                 )
                 await message.answer(
@@ -136,17 +142,18 @@ async def write_in_db(message: types.Message) -> None:
 
             await sql(
                 sql_text_request=f"""UPDATE raid SET
-{u_data.dict[user_id]['choice']} = '{num}'
+{u_data.data[user_id]['choice']} = '{num}'
                         WHERE user_id = '{user_id}';"""
             )
             u_data.delete(user_id)
+    return
 
 
 async def content_type_text(message: types.Message) -> None:
     user_id: int = message.from_user.id
     msg = message.text
     if msg.isnumeric() and msg.isdecimal():
-        if user_id not in u_data.dict:
+        if user_id not in u_data.data:
             u_data.update(user_id, {"num": msg})
             await message.answer(
                 """
@@ -160,7 +167,7 @@ async def content_type_text(message: types.Message) -> None:
                 reply_markup=control_kb,
             )
         else:
-            if "choice" not in u_data.dict[user_id]:
+            if "choice" not in u_data.data[user_id]:
                 await message.answer(
                     """
 Выберите тип кристалов
@@ -238,19 +245,21 @@ async def content_type_text(message: types.Message) -> None:
         ):
             choice = "pristine"
         if choice != "0":
-            if user_id not in u_data.dict:
+            if user_id not in u_data.data:
                 u_data.update(user_id, {"choice": choice})
                 await message.answer(enter_crys)
             else:
-                if "num" not in u_data.dict[user_id]:
+                if "num" not in u_data.data[user_id]:
                     await message.answer(enter_crys)
                 u_data.update(user_id, {"choice": choice})
                 await write_in_db(message)
+    return
 
 
 async def cmd_cancel(message: types.Message) -> None:
     user_id = message.from_id
     u_data.delete(user_id)
+    return
 
 
 async def set_default_commands() -> None:
@@ -262,6 +271,7 @@ async def set_default_commands() -> None:
             ),
         ]
     )
+    return
 
 
 async def main() -> None:
@@ -276,6 +286,7 @@ async def main() -> None:
 
     await dp.skip_updates()
     await dp.start_polling()
+    return
 
 
 if __name__ == "__main__":

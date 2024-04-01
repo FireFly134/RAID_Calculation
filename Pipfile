@@ -4,10 +4,12 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-aiogram = "==2.25.1"
 pandas = "*"
+aiogram = "*"
 sqlalchemy = "*"
 psycopg2-binary = "*"
+imgkit = "*"
+jinja2 = "*"
 
 [dev-packages]
 black = "*"
@@ -17,4 +19,4 @@ mypy = "*"
 sqlalchemy-stubs = "*"
 
 [requires]
-python_version = "3.11"
+python_version = "3.12"

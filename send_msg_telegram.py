@@ -30,7 +30,7 @@ async def mass_send_message(msg: str, resend: bool = False) -> None:
             )
         except Exception as err:
             await bot.send_message(
-                chat_id=os.getenv("MY_USER_ID"),
+                chat_id=os.getenv("MY_USER_ID", ""),
                 text="Error2: \
                 Не удалось отправить сообщение пользователю! - "
                 + str(err)

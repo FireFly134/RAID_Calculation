@@ -269,7 +269,7 @@ async def content_type_text(message: types.Message) -> None:
                 await message.answer_photo(photo=photo)
             elif "посмотреть количество" == msg.lower():
                 df = pd.read_sql(
-                    "SELECT * FROM raid WHERE user_id = :user_id;",
+                    "SELECT * FROM raid WHERE user_id = %(user_id)s;",
                     params={"user_id": user_id},
                     con=engine,
                 )
